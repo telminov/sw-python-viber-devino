@@ -4,9 +4,10 @@ import requests
 
 REST_URL = 'https://viber.devinotele.com:444'
 SEND = '/send'
-CHECK_STATUS = '/status'
+CHECK_STATUS_MESSAGES = '/status'
 
 TYPE_FOR_VIBER = 'viber'
+MAIN_SUBJECT = 'mobil-med'
 
 LOW_PRIORITY = 'low'
 NORMAL_PRIORITY = 'normal'
@@ -59,10 +60,71 @@ class DevinoClient:
         self.password = password
         self.url = url
 
-    def send(self, priority: str, content_type: str, address: str, subject: str, text: str = None,
-             caption: str = None, action: str = None, image: str = None, sms_text: str = None,
-             sms_src_address: str = None, resend_sms: bool = False, validity_viber: int = None, comment: str = None,
-             validity_sms: int = None) -> ApiAnswer:
+    def send_text(self, priority: str, address: str, text: str, content_type: str = CONTENT_TYPE_TEXT,
+                  subject: str = MAIN_SUBJECT, validity_viber: int = 86400, sms_text: str = None,
+                  sms_src_address: str = None, resend_sms: bool = False, comment: str = None,
+                  validity_sms: int = None) -> ApiAnswer:
+
+        json = self._make_json_for_send(priority=priority, address=address, content_type=content_type, subject=subject,
+                                        validity_viber=validity_viber, sms_text=sms_text,
+                                        sms_src_address=sms_src_address,
+                                        resend_sms=resend_sms, comment=comment, validity_sms=validity_sms)
+
+        json['messages'][0]['content']['text'] = text
+
+        answer = self._request(SEND, self._get_auth_header(), json=json)
+        return ApiAnswer.create(answer, json)
+
+    def send_image(self, priority: str, address: str, image: str, content_type: str = CONTENT_TYPE_IMAGE,
+                   subject: str = MAIN_SUBJECT, validity_viber: int = 86400, sms_text: str = None,
+                   sms_src_address: str = None, resend_sms: bool = False, comment: str = None,
+                   validity_sms: int = None) -> ApiAnswer:
+
+        json = self._make_json_for_send(priority=priority, address=address, content_type=content_type, subject=subject,
+                                        validity_viber=validity_viber, sms_text=sms_text,
+                                        sms_src_address=sms_src_address,
+                                        resend_sms=resend_sms, comment=comment, validity_sms=validity_sms)
+
+        json['messages'][0]['content']['imageUrl'] = image
+
+        answer = self._request(SEND, self._get_auth_header(), json=json)
+        return ApiAnswer.create(answer, json)
+
+    def send_text_and_button(self, priority: str, address: str, text: str, caption: str, action: str, image: str,
+                             content_type: str = CONTENT_TYPE_BUTTON, subject: str = MAIN_SUBJECT,
+                             validity_viber: int = 86400, sms_text: str = None, sms_src_address: str = None,
+                             resend_sms: bool = False, comment: str = None, validity_sms: int = None) -> ApiAnswer:
+
+        json = self._make_json_for_send(priority=priority, address=address, content_type=content_type, subject=subject,
+                                        validity_viber=validity_viber, sms_text=sms_text,
+                                        sms_src_address=sms_src_address,
+                                        resend_sms=resend_sms, comment=comment, validity_sms=validity_sms)
+
+        json['messages'][0]['content']['text'] = text
+        json['messages'][0]['content']['caption'] = caption
+        json['messages'][0]['content']['action'] = action
+        if image:
+            json['messages'][0]['content']['imageUrl'] = image
+
+        answer = self._request(SEND, self._get_auth_header(), json=json)
+        return ApiAnswer.create(answer, json)
+
+    def check_status_messages(self, id_messages):
+        json = {
+            'messages': id_messages
+        }
+
+        answer = self._request(CHECK_STATUS_MESSAGES, self._get_auth_header(), json=json)
+        return ApiAnswer.create(answer, json)
+
+    def _get_auth_header(self) -> dict:
+        headers = {'Authorization':
+                   'Basic {}'.format(base64.b64encode('{}:{}'.format(self.login, self.password).encode()).decode())}
+        return headers
+
+    def _make_json_for_send(self, subject: str, priority: str, content_type: str, address: str, validity_viber: int,
+                            sms_text: str, sms_src_address: str, resend_sms: bool, comment: str,
+                            validity_sms: int) -> dict:
         assert priority in PRIORITIES
         assert content_type in CONTENT_TYPES
 
@@ -75,7 +137,8 @@ class DevinoClient:
                         'type': TYPE_FOR_VIBER,
                         'contentType': content_type,
                         'address': address,
-                        'content': {}
+                        'content': {},
+                        'validityPeriodSec': validity_viber,
                     }
                 ]
         }
@@ -86,26 +149,10 @@ class DevinoClient:
             json['resendSms'] = resend_sms
             json['smsText'] = sms_text
             json['smsSrcAddress'] = sms_src_address
-        if validity_viber:
-            json['messages'][0]['validityPeriodSec'] = validity_viber
         if comment:
             json['messages'][0]['comment'] = comment
-        if text:
-            json['messages'][0]['content']['text'] = text
-        if caption:
-            json['messages'][0]['content']['caption'] = caption
-        if action:
-            json['messages'][0]['content']['action'] = action
-        if image:
-            json['messages'][0]['content']['imageUrl'] = image
 
-        answer = self._request(SEND, self._get_auth_header(), json=json)
-        return ApiAnswer.create(answer, json)
-
-    def _get_auth_header(self) -> dict:
-        headers = {'Authorization':
-                       'Basic {}'.format(base64.b64encode('{}:{}'.format(self.login, self.password).encode()).decode())}
-        return headers
+        return json
 
     def _request(self, path, headers, json=None):
         request_url = self.url + path
