@@ -7,7 +7,6 @@ SEND = '/send'
 CHECK_STATUS_MESSAGES = '/status'
 
 TYPE_FOR_VIBER = 'viber'
-MAIN_SUBJECT = 'mobil-med'
 
 LOW_PRIORITY = 'low'
 NORMAL_PRIORITY = 'normal'
@@ -60,8 +59,8 @@ class DevinoClient:
         self.password = password
         self.url = url
 
-    def send_text(self, priority: str, address: str, text: str, content_type: str = CONTENT_TYPE_TEXT,
-                  subject: str = MAIN_SUBJECT, validity_viber: int = 86400, sms_text: str = None,
+    def send_text(self, address: str, text: str, subject: str, priority: str = NORMAL_PRIORITY,
+                  content_type: str = CONTENT_TYPE_TEXT, validity_viber: int = 86400, sms_text: str = None,
                   sms_src_address: str = None, resend_sms: bool = False, comment: str = None,
                   validity_sms: int = None) -> ApiAnswer:
 
@@ -75,8 +74,8 @@ class DevinoClient:
         answer = self._request(SEND, self._get_auth_header(), json=json)
         return ApiAnswer.create(answer, json)
 
-    def send_image(self, priority: str, address: str, image: str, content_type: str = CONTENT_TYPE_IMAGE,
-                   subject: str = MAIN_SUBJECT, validity_viber: int = 86400, sms_text: str = None,
+    def send_image(self, address: str, image: str, subject: str, content_type: str = CONTENT_TYPE_IMAGE,
+                   priority: str = NORMAL_PRIORITY, validity_viber: int = 86400, sms_text: str = None,
                    sms_src_address: str = None, resend_sms: bool = False, comment: str = None,
                    validity_sms: int = None) -> ApiAnswer:
 
@@ -90,8 +89,8 @@ class DevinoClient:
         answer = self._request(SEND, self._get_auth_header(), json=json)
         return ApiAnswer.create(answer, json)
 
-    def send_text_and_button(self, priority: str, address: str, text: str, caption: str, action: str, image: str,
-                             content_type: str = CONTENT_TYPE_BUTTON, subject: str = MAIN_SUBJECT,
+    def send_text_and_button(self, address: str, text: str, caption: str, action: str, image: str, subject: str,
+                             priority: str = NORMAL_PRIORITY, content_type: str = CONTENT_TYPE_BUTTON,
                              validity_viber: int = 86400, sms_text: str = None, sms_src_address: str = None,
                              resend_sms: bool = False, comment: str = None, validity_sms: int = None) -> ApiAnswer:
 
