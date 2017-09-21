@@ -108,7 +108,7 @@ class DevinoClient:
         answer = self._request(SEND, self._get_auth_header(), json=json)
         return ApiAnswer.create(answer, json)
 
-    def check_status_messages(self, id_messages):
+    def check_status_messages(self, id_messages: list) -> ApiAnswer:
         json = {
             'messages': id_messages
         }
