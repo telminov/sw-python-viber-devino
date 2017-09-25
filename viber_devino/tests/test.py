@@ -47,8 +47,7 @@ class DevinoClient(TestCase):
         self.assertTrue(requests_mock.post.called)
         self.assertIsNotNone(exception)
         self.assertEqual(exception.http_status, requests_mock.post.return_value.status_code)
-        self.assertEqual(exception.error.code, error_data['Code'])
-        self.assertEqual(exception.error.description, error_data['Description'])
+        self.assertEqual(exception.error, error_data)
 
     def test_auth_header(self, requests_mock):
         response = self.client._get_auth_header()

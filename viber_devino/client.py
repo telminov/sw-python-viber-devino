@@ -22,14 +22,8 @@ CONTENT_TYPE_BUTTON = 'button'
 CONTENT_TYPES = [CONTENT_TYPE_TEXT, CONTENT_TYPE_IMAGE, CONTENT_TYPE_BUTTON]
 
 
-class DevinoError:
-    def __init__(self, code: int, description: str):
-        self.code = code
-        self.description = description
-
-
 class DevinoException(Exception):
-    def __init__(self, message: str, http_status: int = None, error: DevinoError = None,
+    def __init__(self, message: str, http_status: int = None, error: str = None,
                  base_exception: Exception = None):
         self.message = message
         self.http_status = http_status
@@ -165,11 +159,7 @@ class DevinoClient:
             )
 
         if 400 <= response.status_code <= 500:
-            error_description = response.json()
-            error = DevinoError(
-                code=error_description.get('Code'),
-                description=error_description.get('Description'),
-            )
+            error = response.json()
             raise DevinoException(
                 message='Ошибка отправки post-запроса',
                 http_status=response.status_code,
